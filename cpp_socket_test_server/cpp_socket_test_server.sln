@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpp_socket_test_server", "cpp_socket_test_server\cpp_socket_test_server.vcxproj", "{A8EF3A4B-23B3-486B-892A-69A46ED99430}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A8EF3A4B-23B3-486B-892A-69A46ED99430}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A8EF3A4B-23B3-486B-892A-69A46ED99430}.Debug|Win32.Build.0 = Debug|Win32
+		{A8EF3A4B-23B3-486B-892A-69A46ED99430}.Release|Win32.ActiveCfg = Release|Win32
+		{A8EF3A4B-23B3-486B-892A-69A46ED99430}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
