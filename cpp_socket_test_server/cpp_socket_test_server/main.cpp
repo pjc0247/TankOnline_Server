@@ -123,7 +123,6 @@ void BroadcastArea(char *_area,int p,char *msg,int exclude=-1){
 void Broadcast(int p,char *msg,int exclude=-1){
 	output("broadcast(all) %s\n", msg);
 	
-	output("%d\n", clients.size());
 	/*for(int i=0;i<clients.size();i++){
 		if(clients[i]->n == exclude)
 			continue;
