@@ -195,6 +195,8 @@ void onTankMove(int w,char *msg){
 	x = strtok(msg,",");
 	y = strtok(NULL,",");
 
+	output("moved %d\n", w);
+
 	__ENTER(csClients);
 	clients[w]->user.x = atoi(x);
 	clients[w]->user.y = atoi(y);
@@ -204,6 +206,7 @@ void onTankMove(int w,char *msg){
 	sprintf(msg2,"%d,%s,%s", w,x,y);
 	BroadcastArea(clients[w]->user.area,
 				TANK_MOVE,msg2,w);
+	output("broadcasted %d\n", w);
 	/*for(int i=0;i<clients.size();i++){
 		if(clients[i]->n == w) continue;
 		Send(i,TANK_MOVE,msg2);
@@ -370,6 +373,11 @@ void onSignup(int w,char *msg){
 	// 완료의 메세지 보냄
 	Send(w,SIGNUP_OK,"logged in");
 }
+void onPing(int w,char *msg){
+	int ts = atoi(msg);
+
+	output("ping reply from %d / %dms\n", w, GetTickCount()-ts);
+}
 
 void Initialize(){
 
@@ -390,6 +398,8 @@ void Initialize(){
 	RegistHandler(CHAT_AREA,onChatArea);
 	RegistHandler(CHAT_CHANNEL,onChatChannel);
 	RegistHandler(CHAT_ALL,onChatAll);
+
+	RegistHandler(PING,onPing);
 
 	uptime_st = GetTickCount64();
 
@@ -468,6 +478,9 @@ int main(int argc, char** argv)
               
 			   // 새 클라이언트 연결을 수립한다.
                hClntSock=accept(hServSock, (SOCKADDR*)&clntAddr, &addrLen);  
+
+			   char t = TRUE;
+			   setsockopt(hClntSock, IPPROTO_TCP, TCP_NODELAY, &t, sizeof(t));
 
 			   output("connected... %s - %d\n", inet_ntoa(clntAddr.sin_addr),N);
 
@@ -616,6 +629,13 @@ unsigned int __stdcall ControlThread(void *arg){
 		case 'q':
 			{
 				exit(0);
+			}
+			break;
+		case 'p':
+			{
+				char t[32];
+				sprintf(t,"%d", GetTickCount());
+				Broadcast(PING,t);
 			}
 			break;
 		}
