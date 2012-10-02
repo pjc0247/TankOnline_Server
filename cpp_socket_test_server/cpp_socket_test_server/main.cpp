@@ -387,6 +387,7 @@ void onPing(int w,char *msg){
 	Send(w,PING_NOTIFY,msg2);
 }
 
+
 void Initialize(){
 
 	LoadBlacklist();
