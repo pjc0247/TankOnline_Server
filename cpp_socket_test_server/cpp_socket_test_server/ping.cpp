@@ -19,6 +19,7 @@ unsigned int hPingUpdateThread;
 extern struct PER_HANDLE_DATA;
 extern map<int,PER_HANDLE_DATA*> clients;
 extern void Send(int w,int p,char *m);
+extern void Broadcast(int p,char *m);
 
 unsigned int __stdcall PingUpdateThread(void *arg){
 	while(1){
@@ -40,7 +41,8 @@ void UpdatePing(){
 	char t[16];
 	
 	sprintf(t,"%d", GetTickCount64());
-	for(itor=clients.begin();itor!=clients.end();++itor){
+	/*for(itor=clients.begin();itor!=clients.end();++itor){
 		Send(itor->first,PING,t);
-	}
+	}*/
+	Broadcast(PING,t);
 }
