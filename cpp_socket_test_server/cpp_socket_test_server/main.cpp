@@ -41,6 +41,8 @@ typedef struct
 	int n;
 	USER_DATA user;
 
+	char ping;
+
 	int fileReceived;
 	char fileName[256];
 	int fileLength;
@@ -374,8 +376,14 @@ void onSignup(int w,char *msg){
 }
 void onPing(int w,char *msg){
 	int ts = atoi(msg);
+	char msg2[8] = {'\0'};
 
 	output("ping reply from %d / %dms\n", w, GetTickCount()-ts);
+
+	clients[w]->ping = GetTickCount()-ts;
+	sprintf(msg2,"%d", clients[w]->ping);
+
+	Send(w,PING_NOTIFY,msg2);
 }
 
 void Initialize(){
