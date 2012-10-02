@@ -84,6 +84,7 @@ CRITICAL_SECTION csSession;
 CRITICAL_SECTION csArea;
 
 unsigned long uptime_st;
+unsigned int ping_update_st;
 
 //#define __SYNCRONIZE
 #ifdef	__SYNCRONIZE
@@ -378,9 +379,9 @@ void onPing(int w,char *msg){
 	int ts = atoi(msg);
 	char msg2[8] = {'\0'};
 
-	output("ping reply from %d / %dms\n", w, GetTickCount()-ts);
+	output("ping reply from %d / %dms\n", w, GetTickCount64()-ts);
 
-	clients[w]->ping = GetTickCount()-ts;
+	clients[w]->ping = GetTickCount64()-ts;
 	sprintf(msg2,"%d", clients[w]->ping);
 
 	Send(w,PING_NOTIFY,msg2);
@@ -409,6 +410,7 @@ void Initialize(){
 	RegistHandler(PING,onPing);
 
 	uptime_st = GetTickCount64();
+	ping_update_st = GetTickCount64();
 
 	//area[string("main")].push_back(NULL);
 }
@@ -641,7 +643,7 @@ unsigned int __stdcall ControlThread(void *arg){
 		case 'p':
 			{
 				char t[32];
-				sprintf(t,"%d", GetTickCount());
+				sprintf(t,"%d", GetTickCount64());
 				Broadcast(PING,t);
 			}
 			break;
