@@ -19,7 +19,7 @@ unsigned int hPingUpdateThread;
 extern struct PER_HANDLE_DATA;
 extern map<int,PER_HANDLE_DATA*> clients;
 extern void Send(int w,int p,char *m);
-extern void Broadcast(int p,char *m);
+extern void Broadcast(int p,char *m,int e=-1);
 
 unsigned int __stdcall PingUpdateThread(void *arg){
 	while(1){
