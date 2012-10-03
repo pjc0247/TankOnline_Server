@@ -15,8 +15,6 @@
 #include "protocol.h"
 #include "blacklist.h"
 #include "weblog.h"
-
-#pragma comment (lib,"ws2_32")
  
 using namespace std;
  
