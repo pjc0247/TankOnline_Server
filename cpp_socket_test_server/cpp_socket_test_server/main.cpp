@@ -21,6 +21,25 @@ using namespace std;
 #define BUFSIZE (1024 * 20)
 #define SERVER_PORT 9916 
 
+
+
+enum VAR_TYPE {
+		VAR_INT,
+		VAR_CHAR,
+		VAR_FLOAT,
+		VAR_STRING
+		};
+typedef struct
+{
+	union {
+		int i;
+		float f;
+		char c;
+		char *s;
+	} data;
+	unsigned char type;
+} VAR, *LPVAR;
+
 typedef struct
 {
 	char id[32];
@@ -31,7 +50,9 @@ typedef struct
 
 	bool joined;
 	char area[32];
-} USER_DATA;
+
+	map<string,LPVAR> var;
+} USER_DATA, *LPUSER_DATA;
 typedef struct
 {
 	SOCKET      hClntSock;
@@ -69,6 +90,12 @@ void ParsePacket(int w,char *msg,int msgLength);
 void Send(int w,int p,char *msg);
 void SendBinary(int w,int p,char *data,int len);
 void SendFile(int w,char *file);
+void SendVarNew(int w,int t,char *name,int type);
+void SendVarDelete(int w,int t,char *name);
+void SendVarChange(int w,int t,char *name,int v);
+void SendVarChange(int w,int t,char *name,float v);
+void SendVarChange(int w,int t,char *name,char v);
+void SendVarChange(int w,int t,char *name,char *v);
 
 //vector<PER_HANDLE_DATA*> clients;
 map<int,PER_HANDLE_DATA*> clients;
@@ -187,6 +214,9 @@ void onTankJoin(int w,char *msg){
 		Send(w,TANK_JOIN,msg2);
 		sprintf(msg2,"%d,%d,%d", Area[i]->n,Area[i]->user.x,Area[i]->user.y);
 		Send(w,TANK_MOVE,msg2);
+
+		SendVarNew(w,Area[i]->n,"nick",VAR_STRING);
+		SendVarChange(w,Area[i]->n,"nick",Area[i]->user.nick);
 	}
 	__LEAVE(csClients);
 }
@@ -385,6 +415,67 @@ void onPing(int w,char *msg){
 	Send(w,PING_NOTIFY,msg2);
 }
 
+void onVarNew(int w,char *msg){
+	LPVAR var;
+	unsigned char type;
+
+	type = atoi(msg);
+
+	var = new VAR;
+	var->type = type;
+
+	memset(var,0,sizeof(VAR));
+
+	clients[w]->user.var[string(msg)] = var;
+}
+void onVarDelete(int w,char *msg){
+	LPVAR var;
+
+	var = clients[w]->user.var[string(msg)];
+
+	// 스트링 타입의 변수이면
+	if(var->type == VAR_STRING)
+		// 문자열까지 같이 삭제
+		delete var->data.s;
+
+	delete var;
+}
+void onVarChange(int w,char *msg){
+	LPVAR var;
+
+	var = clients[w]->user.var[string(msg)];
+
+	switch(var->type){
+		case VAR_INT:
+			{
+				var->data.i = atoi(msg);
+			}
+			break;
+		case VAR_FLOAT:
+			{
+				var->data.f = atof(msg);
+			}
+			break;
+		case VAR_CHAR:
+			{
+				var->data.c = msg[0];
+			}
+			break;
+		case VAR_STRING:
+			{
+				int len;
+
+				len = strlen(msg);
+
+				// 새로 변경될 문자열 길이만큼 재할당
+				var->data.s = (char*)realloc(var->data.s,
+					sizeof(char) * len);
+
+				memcpy(var->data.s,msg,sizeof(char) * len);
+			}
+			break;
+	}
+}
 
 void Initialize(){
 
@@ -401,6 +492,10 @@ void Initialize(){
 	RegistHandler(TANK_JOIN,onTankJoin);
 	RegistHandler(TANK_MOVE,onTankMove);
 	RegistHandler(TANK_LEAVE,onTankLeave);
+
+	RegistHandler(VAR_NEW,onVarNew);
+	RegistHandler(VAR_CHANGE,onVarChange);
+	RegistHandler(VAR_DELETE,onVarDelete);
 
 	RegistHandler(CHAT_AREA,onChatArea);
 	RegistHandler(CHAT_CHANNEL,onChatChannel);
@@ -720,6 +815,37 @@ unsigned int __stdcall CompletionThread(void* pComPort)
         return 0;
 }
  
+void SendVarNew(int w,int t,char *name,int type){
+	char msg2[64];
+	sprintf(msg2,"%d,%s,%d", t,name,type);
+	Send(w,VAR_NEW,msg2);
+}
+void SendVarDelete(int w,int t,char *name){
+	char msg2[64];
+	sprintf(msg2,"%d,%s", t,name);
+	Send(w,VAR_DELETE,msg2);
+}
+void SendVarChange(int w,int t,char *name,int v){
+	char msg2[64];
+	sprintf(msg2,"%d,%s,%d", t,name,v);
+	Send(w,VAR_CHANGE,msg2);
+}
+void SendVarChange(int w,int t,char *name,float v){
+	char msg2[64];
+	sprintf(msg2,"%d,%s,%f", t,name,v);
+	Send(w,VAR_CHANGE,msg2);
+}
+void SendVarChange(int w,int t,char *name,char v){
+	char msg2[64];
+	sprintf(msg2,"%d,%s,%c", t,name,v);
+	Send(w,VAR_CHANGE,msg2);
+}
+void SendVarChange(int w,int t,char *name,char *v){
+	char msg2[64];
+	sprintf(msg2,"%d,%s,%s", t,name,v);
+	Send(w,VAR_CHANGE,msg2);
+}
+
 void Send(int w,int p,char *msg){
 	char packet[1024];
 	sprintf(packet,"%d:%s\r\n",
