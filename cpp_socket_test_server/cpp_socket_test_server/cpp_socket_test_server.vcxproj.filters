@@ -42,6 +42,9 @@
     <ClInclude Include="ping.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="database.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -60,6 +63,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="ping.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="database.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

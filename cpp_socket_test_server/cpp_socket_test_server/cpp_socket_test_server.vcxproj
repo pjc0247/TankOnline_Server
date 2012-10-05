@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blacklist.h" />
+    <ClInclude Include="database.h" />
     <ClInclude Include="iocp_serv.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="ping.h" />
@@ -95,6 +96,7 @@
   <ItemGroup>
     <ClCompile Include=".\main.cpp" />
     <ClCompile Include="blacklist.cpp" />
+    <ClCompile Include="database.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="ping.cpp" />
     <ClCompile Include="stdafx.cpp">
