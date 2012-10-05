@@ -65,7 +65,19 @@ void Database::parse(){
 	}
 }
 void *Database::get(const char *name){
-	return this->data[string(name)].data;
+	//return this->data[string(name)].data;
+	static int zero = 0;
+	map<string,Datum>::iterator itor;
+	for(itor=data.begin();itor!=data.end();++itor){
+		if(itor->first == string(name)){
+			int *a;
+			a = (int *)(itor->second.data);
+			printf("find %d\n", *a);
+			return (void*)itor->second.data;
+		}
+	}
+	printf("nn\n");
+	return (void*)&zero;
 }
 void Database::set(const char *name,void *data,int len){
 	Datum d;
@@ -101,5 +113,7 @@ void Database::save(){
 		
 		data = it->second.data;
 		fwrite(data,sizeof(len),1,fp);
+
+		printf("save -- %s, %d\n", name,*(int*)data);
 	}
 }

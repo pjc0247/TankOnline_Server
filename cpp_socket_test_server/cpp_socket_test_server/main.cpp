@@ -53,6 +53,7 @@ typedef struct
 	bool joined;
 	char area[32];
 
+	Database *db;
 	map<string,LPVAR> var;
 } USER_DATA, *LPUSER_DATA;
 typedef struct
@@ -192,9 +193,9 @@ void onTankJoin(int w,char *msg){
 	output("%d joined to area %s\n",w, _area);
 
 	__ENTER(csClients);
-	clients[w]->user.x = 0;
-	clients[w]->user.x = 0;
-	clients[w]->user.speed = 8;
+	/*clients[w]->user.x = 0;
+	clients[w]->user.y = 0;
+	clients[w]->user.speed = 8;*/
 	clients[w]->user.joined = true;
 	__ENTER(csArea);
 	//game.push_back(clients[w]);
@@ -212,6 +213,9 @@ void onTankJoin(int w,char *msg){
 	BroadcastArea(_area,VAR_NEW,msg2,w);
 	sprintf(msg2,"%d,%s,%s", w,"nick",clients[w]->user.nick);
 	BroadcastArea(_area,VAR_CHANGE,msg2,w);
+
+	sprintf(msg2,"-1,%d,%d", clients[w]->user.x,clients[w]->user.y);
+	Send(w,TANK_MOVE,msg2);
 
 	vector<PER_HANDLE_DATA*> &Area = area[string(_area)];
 	for(int i=0;i<Area.size();i++){
@@ -293,8 +297,18 @@ bool onConnect(int w,char *ip){
 void onDisconnect(int w,char *ip){
 	char *id = clients[w]->user.id;
 	output("%s logged out\n", id);
+
 	if(isSessionOpened(id)){
 		output("close session %d\n", session[string(id)]);
+
+		clients[w]->user.db->set("x",
+				(void*)&clients[w]->user.x,
+				sizeof(int));
+		clients[w]->user.db->set("y",
+				(void*)&clients[w]->user.y,
+				sizeof(int));
+		clients[w]->user.db->save();
+		clients[w]->user.db->close();
 
 		if(clients[w]->user.joined)
 			onTankLeave(w,"");
@@ -346,6 +360,11 @@ void onLogin(int w,char *msg){
 	__ENTER(csSession);
 	session[string(id)] = w;
 	__LEAVE(csSession);
+
+	sprintf(path,"accounts\\%s.db",id);
+	clients[w]->user.db = Database::create(path);
+	clients[w]->user.x = *(int *)clients[w]->user.db->get("x");
+	clients[w]->user.y = *(int *)clients[w]->user.db->get("y");
 
 	Send(w,LOGIN_ACCEPT,clients[w]->user.nick);
 	sprintf(path,"accounts\\%s.png",id);
