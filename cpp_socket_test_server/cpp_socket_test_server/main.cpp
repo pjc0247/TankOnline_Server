@@ -15,7 +15,9 @@
 #include "protocol.h"
 #include "blacklist.h"
 #include "weblog.h"
- 
+
+#include "database.h"
+
 using namespace std;
  
 #define BUFSIZE (1024 * 20)
@@ -39,7 +41,7 @@ typedef struct
 	} data;
 	unsigned char type;
 } VAR, *LPVAR;
-
+	
 typedef struct
 {
 	char id[32];
@@ -206,6 +208,10 @@ void onTankJoin(int w,char *msg){
 		if(clients[i]->n == w) continue;
 		Send(i,TANK_JOIN,msg2);
 	}*/
+	sprintf(msg2,"%d,%s,%d", w,"nick",VAR_STRING);
+	BroadcastArea(_area,VAR_NEW,msg2,w);
+	sprintf(msg2,"%d,%s,%s", w,"nick",clients[w]->user.nick);
+	BroadcastArea(_area,VAR_CHANGE,msg2,w);
 
 	vector<PER_HANDLE_DATA*> &Area = area[string(_area)];
 	for(int i=0;i<Area.size();i++){
@@ -843,6 +849,7 @@ void SendVarChange(int w,int t,char *name,char v){
 void SendVarChange(int w,int t,char *name,char *v){
 	char msg2[64];
 	sprintf(msg2,"%d,%s,%s", t,name,v);
+	output("%s\n", msg2);
 	Send(w,VAR_CHANGE,msg2);
 }
 

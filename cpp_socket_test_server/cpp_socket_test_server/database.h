@@ -16,7 +16,6 @@ public:
 
 	void close();
 
-
 	void *get(const char *name);
 	
 	void set(const char *name,void *data,int len);
