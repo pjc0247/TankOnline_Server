@@ -287,13 +287,22 @@ void onTankLeave(int w,char *msg){
 	//__LEAVE(csClients);
 }
 
+/*
+새 클라이언트와 연결이 수립되었을 때
+false를 리턴하면 연결 거부.
+*/
 bool onConnect(int w,char *ip){
 	
+	// 밴 목록에 있는 아이피인지 조사한다.
 	if(isBlockedIP(ip))
 		return false;
 
 	return true;
 }
+
+/*
+클라이언트와의 연결이 끊어졌을 때
+*/
 void onDisconnect(int w,char *ip){
 	char *id = clients[w]->user.id;
 	output("%s logged out\n", id);
@@ -324,6 +333,10 @@ void onDisconnect(int w,char *ip){
 		__LEAVE(csSession);
 	}
 }
+
+/*
+클라이언트가 로그인을 요청할 때
+*/
 void onLogin(int w,char *msg){
 	char *id,*pw;
 	id = strtok(msg,",");
@@ -339,6 +352,8 @@ void onLogin(int w,char *msg){
 	char path[256];
 	sprintf(path,"accounts\\%s", id);
 	FILE *fp = fopen(path,"r");
+
+	// 존재하는 계정 정보가 없는 경우
 	if(fp == NULL){
 		Send(w,LOGIN_DENY,"out");
 		return;
@@ -351,6 +366,7 @@ void onLogin(int w,char *msg){
 	fread(
 		clients[w]->user.nick,sizeof(char),32,fp);
 
+	// 비밀번호가 일치하지 않을 때
 	if(strcmp(rpw,pw)){
 		Send(w,LOGIN_DENY,"wp");
 		return;
@@ -360,21 +376,31 @@ void onLogin(int w,char *msg){
 
 	fclose(fp);
 
+
+	// 세션을 생성한다.
 	__ENTER(csSession);
 	session[string(id)] = w;
 	__LEAVE(csSession);
 
-	sprintf(path,"accounts\\%s.db",id);
+	// 해당 계정의 db를 연다
 	Database *db;
+	sprintf(path,"accounts\\%s.db",id);
 	db = Database::create(path);
 	clients[w]->user.db = db;
+	// 최근 좌표값을 얻어온다.
 	clients[w]->user.x = *(int *)db->get("x");
 	clients[w]->user.y = *(int *)db->get("y");
 
+	// 로그인 완료 신호를 보낸다.
 	Send(w,LOGIN_ACCEPT,clients[w]->user.nick);
+
+	// 계정의 프로필 사진을 전송한다.
 	sprintf(path,"accounts\\%s.png",id);
 	SendFile(w,path);
 }
+/*
+클라이언트가 회원 가입을 요청할 때
+*/
 void onSignup(int w,char *msg){
 	char *id,*pw,*nick;
 	id = strtok(msg,",");
@@ -384,12 +410,14 @@ void onSignup(int w,char *msg){
 	char path[256];
 	sprintf(path,"accounts\\%s", id);
 	FILE*fp = fopen(path,"r");
+	// 이미 존재하는 아이디일 경우
 	if(fp != NULL){
 		Send(w,SIGNUP_ERR_ID,"exist");
 		fclose(fp);
 		return;
 	}
 	fp = fopen(path,"w");
+	// 어떤 이유로 파일을 생성할 수 없는 경우
 	if(fp == NULL){
 		output("failed to create account\n");
 		Send(w,SIGNUP_ERR_ID,"err");
@@ -507,6 +535,9 @@ void onVarChange(int w,char *msg){
 	}
 }
 
+/*
+서버를 초기화한다.
+*/
 void Initialize(){
 
 	LoadBlacklist();
@@ -538,6 +569,9 @@ void Initialize(){
 
 	//area[string("main")].push_back(NULL);
 }
+/*
+서버를 종료한다.
+*/
 void Quit(){
 	DeleteCriticalSection(&csSession);
 	DeleteCriticalSection(&csClients);
@@ -599,6 +633,7 @@ int main(int argc, char** argv)
 		// 프로그램 초기화
 		Initialize();
 
+		// 서버 컨트롤러 스레드를 생성
 		_beginthreadex(NULL, 0, ControlThread, NULL, 0, NULL);
 
 		int N = 0;
