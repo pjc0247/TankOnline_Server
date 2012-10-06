@@ -301,14 +301,17 @@ void onDisconnect(int w,char *ip){
 	if(isSessionOpened(id)){
 		output("close session %d\n", session[string(id)]);
 
-		clients[w]->user.db->set("x",
+		Database *db;
+		db = clients[w]->user.db;
+
+		db->set("x",
 				(void*)&clients[w]->user.x,
 				sizeof(int));
-		clients[w]->user.db->set("y",
+		db->set("y",
 				(void*)&clients[w]->user.y,
 				sizeof(int));
-		clients[w]->user.db->save();
-		clients[w]->user.db->close();
+		db->save();
+		db->close();
 
 		if(clients[w]->user.joined)
 			onTankLeave(w,"");
@@ -362,9 +365,11 @@ void onLogin(int w,char *msg){
 	__LEAVE(csSession);
 
 	sprintf(path,"accounts\\%s.db",id);
-	clients[w]->user.db = Database::create(path);
-	clients[w]->user.x = *(int *)clients[w]->user.db->get("x");
-	clients[w]->user.y = *(int *)clients[w]->user.db->get("y");
+	Database *db;
+	db = Database::create(path);
+	clients[w]->user.db = db;
+	clients[w]->user.x = *(int *)db->get("x");
+	clients[w]->user.y = *(int *)db->get("y");
 
 	Send(w,LOGIN_ACCEPT,clients[w]->user.nick);
 	sprintf(path,"accounts\\%s.png",id);
