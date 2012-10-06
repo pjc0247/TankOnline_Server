@@ -28,6 +28,11 @@ void UnloadBlacklist(){
 
 	output("blacklist unloaded\n");
 }
+void ClearBlacklist(){
+	blacklist.clear();
+
+	output("blacklist cleared\n");
+}
 bool isBlockedIP(const char *ip){
 	//return true;
 	return blacklist[string(ip)];

@@ -12,6 +12,9 @@ using namespace std;
 
 list<string> logs;
 
+void ClearLog(){
+	logs.clear();
+}
 void output(const char *fmt, ...)
 {
 	char buffer[1024];

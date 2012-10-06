@@ -581,118 +581,118 @@ void Quit(){
 
 int main(int argc, char** argv)
 {
-        WSADATA wsaData;
-        HANDLE hCompletionPort;      
-        SYSTEM_INFO SystemInfo;
-        SOCKADDR_IN servAddr;
-        LPPER_IO_DATA PerIoData;
-        LPPER_HANDLE_DATA PerHandleData;
- 
-        SOCKET hServSock;
-        DWORD RecvBytes;
-        int i;
-        DWORD Flags;
- 
-		SetConsoleTitleA("TankOnline Server");
+	WSADATA wsaData;
+	HANDLE hCompletionPort;      
+	SYSTEM_INFO SystemInfo;
+	SOCKADDR_IN servAddr;
+	LPPER_IO_DATA PerIoData;
+	LPPER_HANDLE_DATA PerHandleData;
 
-        if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-               output("startup error\n");
- 
-        DWORD dwProcessor;
-       
-        GetSystemInfo(&SystemInfo);
- 
-        dwProcessor = SystemInfo.dwNumberOfProcessors;
- 
-        hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, (dwProcessor * 2));
- 
-        for(i=0; i < (dwProcessor * 2); i++) {
-               //CreateThread(NULL, 0, CompletionThread, (LPVOID)hCompletionPort, 0, NULL);
-                _beginthreadex(NULL, 0, CompletionThread, (LPVOID)hCompletionPort, 0, NULL);
-        }
- 
-        hServSock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-        servAddr.sin_family=AF_INET;
-        servAddr.sin_addr.s_addr=htonl(INADDR_ANY);
-        servAddr.sin_port=htons(SERVER_PORT);
- 
- 
-        if(bind(hServSock, (SOCKADDR*)&servAddr, sizeof(servAddr)) == SOCKET_ERROR) {
-               output("bind error\n");
-			   return 1;
-        }
- 
-        if(listen(hServSock, 5) == SOCKET_ERROR) {
-               output("listen error\n");
-			   return 1;
-        }
-       
-		output("server ready - %dcore/%dthread\n",dwProcessor,dwProcessor*2);
- 
+	SOCKET hServSock;
+	DWORD RecvBytes;
+	int i;
+	DWORD Flags;
 
-		// 프로그램 초기화
-		Initialize();
+	SetConsoleTitleA("TankOnline Server");
 
-		// 서버 컨트롤러 스레드를 생성
-		_beginthreadex(NULL, 0, ControlThread, NULL, 0, NULL);
+	if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+		output("startup error\n");
 
-		int N = 0;
-        do
-        {      
-               SOCKET hClntSock;
-               SOCKADDR_IN clntAddr;        
-               int addrLen=sizeof(clntAddr);
-			   bool ret;
-              
-			   // 새 클라이언트 연결을 수립한다.
-               hClntSock=accept(hServSock, (SOCKADDR*)&clntAddr, &addrLen);  
+	DWORD dwProcessor;
 
-			   char t = TRUE;
-			   setsockopt(hClntSock, IPPROTO_TCP, TCP_NODELAY, &t, sizeof(t));
+	GetSystemInfo(&SystemInfo);
 
-			   output("connected... %s - %d\n", inet_ntoa(clntAddr.sin_addr),N);
+	dwProcessor = SystemInfo.dwNumberOfProcessors;
 
-			   // onConnect 핸들러를 호출한다.
-			   ret = onConnect(N,inet_ntoa(clntAddr.sin_addr));
-			   if(ret == false){
-				   // 연결 거부됨
-				   output("connection denied\n");
-				   continue;
-			   }
-              
-               PerHandleData=(LPPER_HANDLE_DATA)malloc(sizeof(PER_HANDLE_DATA));          
-               PerHandleData->hClntSock=hClntSock;
-			   PerHandleData->n = N;
-			   PerHandleData->fileRecv = false;
-			   memset(&PerHandleData->user,0,sizeof(USER_DATA));
-               memcpy(&(PerHandleData->clntAddr), &clntAddr, addrLen);
- 
-               CreateIoCompletionPort((HANDLE)hClntSock,hCompletionPort,(DWORD)PerHandleData,0);
-              
-               PerIoData = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
-               memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));           
-               PerIoData->wsaBuf.len = BUFSIZE;
-               PerIoData->wsaBuf.buf = PerIoData->buffer;
-               Flags=0;
+	hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, (dwProcessor * 2));
 
-			   clients[N] = PerHandleData;
- 
-               WSARecv(PerHandleData->hClntSock,
-                              &(PerIoData->wsaBuf),
-                              1,                
-                              &RecvBytes,                                 
-                              &Flags,
-                              &(PerIoData->overlapped),
-                              NULL
-                              );        
-        }while(++N);
+	for(i=0; i < (dwProcessor * 2); i++) {
+		//CreateThread(NULL, 0, CompletionThread, (LPVOID)hCompletionPort, 0, NULL);
+		_beginthreadex(NULL, 0, CompletionThread, (LPVOID)hCompletionPort, 0, NULL);
+	}
 
-		WSACleanup();
-		Quit();
+	hServSock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	servAddr.sin_family=AF_INET;
+	servAddr.sin_addr.s_addr=htonl(INADDR_ANY);
+	servAddr.sin_port=htons(SERVER_PORT);
 
-        return 0;
+
+	if(bind(hServSock, (SOCKADDR*)&servAddr, sizeof(servAddr)) == SOCKET_ERROR) {
+		output("bind error\n");
+		return 1;
+	}
+
+	if(listen(hServSock, 5) == SOCKET_ERROR) {
+		output("listen error\n");
+		return 1;
+	}
+
+	output("server ready - %dcore/%dthread\n",dwProcessor,dwProcessor*2);
+
+
+	// 프로그램 초기화
+	Initialize();
+
+	// 서버 컨트롤러 스레드를 생성
+	_beginthreadex(NULL, 0, ControlThread, NULL, 0, NULL);
+
+	int N = 0;
+	do
+	{      
+		SOCKET hClntSock;
+		SOCKADDR_IN clntAddr;        
+		int addrLen=sizeof(clntAddr);
+		bool ret;
+
+		// 새 클라이언트 연결을 수립한다.
+		hClntSock=accept(hServSock, (SOCKADDR*)&clntAddr, &addrLen);  
+
+		char t = TRUE;
+		setsockopt(hClntSock, IPPROTO_TCP, TCP_NODELAY, &t, sizeof(t));
+
+		output("connected... %s - %d\n", inet_ntoa(clntAddr.sin_addr),N);
+
+		// onConnect 핸들러를 호출한다.
+		ret = onConnect(N,inet_ntoa(clntAddr.sin_addr));
+		if(ret == false){
+			// 연결 거부됨
+			output("connection denied\n");
+			continue;
+		}
+
+		PerHandleData=(LPPER_HANDLE_DATA)malloc(sizeof(PER_HANDLE_DATA));          
+		PerHandleData->hClntSock=hClntSock;
+		PerHandleData->n = N;
+		PerHandleData->fileRecv = false;
+		memset(&PerHandleData->user,0,sizeof(USER_DATA));
+		memcpy(&(PerHandleData->clntAddr), &clntAddr, addrLen);
+
+		CreateIoCompletionPort((HANDLE)hClntSock,hCompletionPort,(DWORD)PerHandleData,0);
+
+		PerIoData = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
+		memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));           
+		PerIoData->wsaBuf.len = BUFSIZE;
+		PerIoData->wsaBuf.buf = PerIoData->buffer;
+		Flags=0;
+
+		clients[N] = PerHandleData;
+
+		WSARecv(PerHandleData->hClntSock,
+			&(PerIoData->wsaBuf),
+			1,                
+			&RecvBytes,                                 
+			&Flags,
+			&(PerIoData->overlapped),
+			NULL
+			);        
+	}while(++N);
+
+	WSACleanup();
+	Quit();
+
+	return 0;
 }
- 
+
 void ControlShell(){
 	output("--ControlShell\n");
 	while(1){
@@ -710,6 +710,17 @@ void ControlShell(){
 		}
 		else if(!strcmp(cmd,"builddate")){
 			output(">> %s\n", __DATE__);
+		}
+		else if(!strcmp(cmd,"clear")){
+			char *p1;
+			p1 = strtok(NULL," ");
+
+			if(!strcmp(p1,"log")){
+				ClearLog();
+			}
+			else if(!strcmp(p1,"blacklist")){
+				ClearBlacklist();
+			}
 		}
 		else if(!strcmp(cmd,"reload")){
 			char *p1;
@@ -811,75 +822,75 @@ unsigned int __stdcall ControlThread(void *arg){
 }
 unsigned int __stdcall CompletionThread(void* pComPort)
 {
-        HANDLE hCompletionPort =(HANDLE)pComPort;
-        DWORD BytesTransferred;
- 
-        LPPER_HANDLE_DATA      PerHandleData;
-        LPPER_IO_DATA          PerIoData;
-       
-        DWORD flags;
-       
-        while(1)
-        {
-               GetQueuedCompletionStatus(hCompletionPort,
-										&BytesTransferred,
-										(LPDWORD)&PerHandleData,
-										(LPOVERLAPPED*)&PerIoData,
-										INFINITE);
- 
-               if(BytesTransferred == 0)
-               {
-				   output("closed %d\n",PerHandleData->n);
+	HANDLE hCompletionPort =(HANDLE)pComPort;
+	DWORD BytesTransferred;
 
-				   onDisconnect(
-					   PerHandleData->n,
-					   inet_ntoa(PerHandleData->clntAddr.sin_addr)
-					   );
+	LPPER_HANDLE_DATA      PerHandleData;
+	LPPER_IO_DATA          PerIoData;
 
-				   __ENTER(csClients);
-				   /*for(int i=0;i<clients.size();i++){
-					   if(clients[i] == PerHandleData){
-						   for(int j=i;j<clients.size()-1;j++)
-							   clients[j] = clients[j+1];
-						   clients.pop_back();
-						   break;
-					   }
-				   }*/
-				   map<int,PER_HANDLE_DATA*>::iterator itor;
-				   itor = clients.find(PerHandleData->n);
-				   clients.erase(itor);
-				   __LEAVE(csClients);
+	DWORD flags;
 
-				   closesocket(PerHandleData->hClntSock);
-				   free(PerHandleData);
-				   free(PerIoData);
-				   continue;             
-               }             
-               PerIoData->wsaBuf.len = BytesTransferred;
-			   PerIoData->wsaBuf.buf[BytesTransferred] = '\0';
+	while(1)
+	{
+		GetQueuedCompletionStatus(hCompletionPort,
+			&BytesTransferred,
+			(LPDWORD)&PerHandleData,
+			(LPOVERLAPPED*)&PerIoData,
+			INFINITE);
 
-			   ParsePacket(PerHandleData->n,
-							PerIoData->wsaBuf.buf,
-							PerIoData->wsaBuf.len);
+		if(BytesTransferred == 0)
+		{
+			output("closed %d\n",PerHandleData->n);
 
-			   memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));
-               PerIoData->wsaBuf.len=BUFSIZE;
-               PerIoData->wsaBuf.buf=PerIoData->buffer;
- 
-               flags=0;
-               WSARecv(PerHandleData->hClntSock,
-                              &(PerIoData->wsaBuf),
-                              1,
-                              NULL,
-                              &flags,
-                              &(PerIoData->overlapped),
-                              NULL
-                              );      
-               
-        }
-        return 0;
+			onDisconnect(
+				PerHandleData->n,
+				inet_ntoa(PerHandleData->clntAddr.sin_addr)
+				);
+
+			__ENTER(csClients);
+			/*for(int i=0;i<clients.size();i++){
+			if(clients[i] == PerHandleData){
+			for(int j=i;j<clients.size()-1;j++)
+			clients[j] = clients[j+1];
+			clients.pop_back();
+			break;
+			}
+			}*/
+			map<int,PER_HANDLE_DATA*>::iterator itor;
+			itor = clients.find(PerHandleData->n);
+			clients.erase(itor);
+			__LEAVE(csClients);
+
+			closesocket(PerHandleData->hClntSock);
+			free(PerHandleData);
+			free(PerIoData);
+			continue;             
+		}             
+		PerIoData->wsaBuf.len = BytesTransferred;
+		PerIoData->wsaBuf.buf[BytesTransferred] = '\0';
+
+		ParsePacket(PerHandleData->n,
+			PerIoData->wsaBuf.buf,
+			PerIoData->wsaBuf.len);
+
+		memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));
+		PerIoData->wsaBuf.len=BUFSIZE;
+		PerIoData->wsaBuf.buf=PerIoData->buffer;
+
+		flags=0;
+		WSARecv(PerHandleData->hClntSock,
+			&(PerIoData->wsaBuf),
+			1,
+			NULL,
+			&flags,
+			&(PerIoData->overlapped),
+			NULL
+			);      
+
+	}
+	return 0;
 }
- 
+
 void SendVarNew(int w,int t,char *name,int type){
 	char msg2[64];
 	sprintf(msg2,"%d,%s,%d", t,name,type);
