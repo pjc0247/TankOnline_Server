@@ -53,7 +53,7 @@ unsigned int __stdcall WeblogThread(void *arg){
 		ErrorHandling("listen() error");
 
 
-	output("Weblog server ready\n");
+	output("Weblog server ready - port %d\n",WEBLOG_PORT);
 	while(1){
 		clntAddrSize=sizeof(clntAddr);
 		hClntSock=accept(hServSock, (SOCKADDR*)&clntAddr, &clntAddrSize);

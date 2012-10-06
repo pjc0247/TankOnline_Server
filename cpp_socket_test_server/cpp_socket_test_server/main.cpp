@@ -15,6 +15,7 @@
 #include "protocol.h"
 #include "blacklist.h"
 #include "weblog.h"
+#include "ping.h"
 
 #include "database.h"
 
@@ -542,6 +543,7 @@ void Initialize(){
 
 	LoadBlacklist();
 	StartWeblog();
+	StartPingUpdate();
 
 	InitializeCriticalSection(&csSession);
 	InitializeCriticalSection(&csClients);
@@ -576,6 +578,10 @@ void Quit(){
 	DeleteCriticalSection(&csSession);
 	DeleteCriticalSection(&csClients);
 	DeleteCriticalSection(&csArea);
+
+	UnloadBlacklist();
+	StopWeblog();
+	StopPingUpdate();
 }
 
 
@@ -838,6 +844,7 @@ unsigned int __stdcall CompletionThread(void* pComPort)
 			(LPOVERLAPPED*)&PerIoData,
 			INFINITE);
 
+		// 0 바이트 수신함 -> 연결 종료됨
 		if(BytesTransferred == 0)
 		{
 			output("closed %d\n",PerHandleData->n);

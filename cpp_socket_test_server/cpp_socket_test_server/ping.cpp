@@ -22,9 +22,12 @@ extern void Send(int w,int p,char *m);
 extern void Broadcast(int p,char *m,int e=-1);
 
 unsigned int __stdcall PingUpdateThread(void *arg){
+	output("Ping update thread ready - interval %d\n",
+		PING_UPDATE_INTERVAL);
+
 	while(1){
-		UpdatePing();
 		Sleep(3000);
+		UpdatePing();
 	}
 	return 0;
 }
