@@ -14,11 +14,17 @@ void Database::close(){
 	fp = NULL;
 }
 bool Database::open(const char *file){
+	output("open database - %s\n", file);
+
+	sprintf(fileName,file);
+
 	fp = fopen(file,"rb+");
 	if(fp == NULL)
 		fp = fopen(file,"wb+");
-	else
+	else{
 		parse();
+		close();
+	}
 	return true;
 }
 Database *Database::create(const char *file){
@@ -30,7 +36,6 @@ void Database::parse(){
 	int n;
 
 	fread(&n,sizeof(int),1,fp);
-	printf("data size %d\n", n);
 
 	/*
 	DataStruct
@@ -70,13 +75,9 @@ void *Database::get(const char *name){
 	map<string,Datum>::iterator itor;
 	for(itor=data.begin();itor!=data.end();++itor){
 		if(itor->first == string(name)){
-			int *a;
-			a = (int *)(itor->second.data);
-			printf("find %d\n", *a);
 			return (void*)itor->second.data;
 		}
 	}
-	printf("nn\n");
 	return (void*)&zero;
 }
 void Database::set(const char *name,void *data,int len){
@@ -88,6 +89,10 @@ void Database::set(const char *name,void *data,int len){
 }
 void Database::save(){
 	map<string,Datum>::iterator it = data.begin();
+
+	if(fp == NULL){
+		open(fileName);
+	}
 
 	fseek(fp,0,SEEK_SET);
 
@@ -113,7 +118,7 @@ void Database::save(){
 		
 		data = it->second.data;
 		fwrite(data,sizeof(len),1,fp);
-
-		printf("save -- %s, %d\n", name,*(int*)data);
 	}
+
+	close();
 }

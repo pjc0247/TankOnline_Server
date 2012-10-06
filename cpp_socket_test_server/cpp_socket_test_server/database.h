@@ -31,6 +31,7 @@ private:
 		int len;
 	};
 
+	char fileName[256];
 	map<string,Datum> data;
 	FILE *fp;
 };
