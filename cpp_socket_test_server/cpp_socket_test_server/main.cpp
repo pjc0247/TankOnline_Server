@@ -981,10 +981,15 @@ void SendFile(int w,char *file){
 	while(1){
 		char buffer[128];
 		DWORD dwRead;
+		int sent;
 
 		ReadFile(fp,buffer,128,&dwRead,NULL);
-		send(clients[w]->hClntSock,buffer,dwRead,0);
+		sent = send(clients[w]->hClntSock,buffer,dwRead,0);
 
+		if(sent == -1){
+			printf("send aborted %s\n", fileName);
+			goto CloseFile;
+		}
 		if(dwRead != 128)
 			break;
 	}
