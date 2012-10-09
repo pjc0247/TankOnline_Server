@@ -987,8 +987,9 @@ void SendFile(int w,char *file){
 		sent = send(clients[w]->hClntSock,buffer,dwRead,0);
 
 		if(sent == -1){
-			printf("send aborted %s\n", fileName);
-			goto CloseFile;
+			printf("send failed - %s\n", file);
+//			printf("send aborted %s\n", fileName);
+			break;
 		}
 		if(dwRead != 128)
 			break;
