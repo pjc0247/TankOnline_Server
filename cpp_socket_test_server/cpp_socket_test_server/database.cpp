@@ -57,7 +57,7 @@ void Database::parse(){
 		fread(name,sizeof(char),len,fp);
 		name[len] = '\0';
 		fread(&type,sizeof(int),1,fp);
-		fread(&len,sizeof(int),1,fp);
+		fread(&len,sizeof(int),1,fp);	
 		data = malloc(len);
 		fread(data,sizeof(len),1,fp);
 
